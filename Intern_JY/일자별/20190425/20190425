@@ -1,0 +1,18 @@
+20190425
+ for Loop:=0 to List.Count-1 do
+  begin   
+   if stlTemp[Loop] = stReceivedText then
+    begin
+     ShowMessage('이미 있는 아이디 입니다.');
+	 exit();
+   else
+ 
+    end
+ end;
+ 
+ 
+TList와 TStringList의 차이
+차이는 스트링 자체를 갖는 것과 포인터를 넘기는 차이?
+TStringList는 델파이 유닛 중 classes라는 유닛에 기본적으로 포함 클래스
+TStringList =class(TStrings)
+즉, TStrings를 상속 받고 있다.

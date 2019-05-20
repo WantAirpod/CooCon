@@ -1,0 +1,90 @@
+object kloikm: Tkloikm
+  Left = 245
+  Top = 189
+  Width = 524
+  Height = 357
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -11
+  Font.Name = 'MS Sans Serif'
+  Font.Style = []
+  OldCreateOrder = False
+  PixelsPerInch = 96
+  TextHeight = 13
+  object Label1: TLabel
+    Left = 24
+    Top = 24
+    Width = 33
+    Height = 13
+    Caption = #50500#51060#46356
+  end
+  object Label2: TLabel
+    Left = 24
+    Top = 48
+    Width = 22
+    Height = 13
+    Caption = #52292#54021
+  end
+  object ChatMsg: TEdit
+    Left = 80
+    Top = 176
+    Width = 281
+    Height = 21
+    TabOrder = 0
+    OnKeyPress = ChatMsgKeyPress
+  end
+  object Button1: TButton
+    Left = 128
+    Top = 24
+    Width = 41
+    Height = 17
+    Caption = #51217#49549
+    TabOrder = 1
+    OnClick = Button1Click
+  end
+  object UserId: TEdit
+    Left = 64
+    Top = 24
+    Width = 57
+    Height = 21
+    TabOrder = 2
+  end
+  object Edit3: TEdit
+    Left = 24
+    Top = 176
+    Width = 57
+    Height = 21
+    TabOrder = 3
+    Text = #47784#46160#50640#44172
+  end
+  object ChatMemo: TMemo
+    Left = 24
+    Top = 64
+    Width = 337
+    Height = 109
+    Align = alCustom
+    Lines.Strings = (
+      ' ')
+    TabOrder = 4
+  end
+  object Timer1: TTimer
+    Interval = 300
+    OnTimer = Timer1Timer
+    Left = 432
+  end
+  object IdTCPClient1: TIdTCPClient
+    MaxLineAction = maException
+    ReadTimeout = 0
+    OnDisconnected = IdTCPClient1Disconnected
+    Host = '127.0.0.1'
+    Port = 1234
+    Left = 408
+  end
+  object IdAntiFreeze1: TIdAntiFreeze
+    Left = 456
+  end
+  object IdThreadMgrDefault1: TIdThreadMgrDefault
+    Left = 384
+  end
+end
