@@ -1,0 +1,7 @@
+대출신청버튼 클릭
+GET http://demo.initech.com/initech/plugin64/tools/Time.jsp?uu=2744883e30691205c60976205418c3d0ab2651ff HTTP/1.1
+
+인증서비밀번호입력
+GET http://demo.initech.com/initech/plugin64/tools/Time.jsp?uu=2c3c603d47c58c8feaef8ee496adde605cf1d7be HTTP/1.1
+POST http://demo.initech.com/initech/demo/sign64/Sign2.jsp HTTP/1.1
+

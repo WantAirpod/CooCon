@@ -1,0 +1,303 @@
+unit Unit1;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs,  StdCtrls, OleCtrls,
+  INISWEB60Lib_TLB,com.webcash.utils.Webagent, com.webcash.utils.Strutil;
+
+type
+   = class(TWebagent);
+  TForm1 = class(TForm)
+   INI: TINISafe6Ctrl;
+    btn1: TButton;
+    edt1: TEdit;
+    edt2: TEdit;
+    lbl1: TLabel;
+    lbl2: TLabel;
+    edt3: TEdit;
+    lbl3: TLabel;
+    edt4: TEdit;
+    edt5: TEdit;
+    edt6: TEdit;
+    btn2: TButton;
+    edt7: TEdit;
+    edt8: TEdit;
+    edt9: TEdit;
+    lbl4: TLabel;
+    lbl6: TLabel;
+    lbl7: TLabel;
+    lbl8: TLabel;
+    lbl9: TLabel;
+    lbl10: TLabel;
+    lbl11: TLabel;
+    lbl12: TLabel;
+    lbl13: TLabel;
+    lbl14: TLabel;
+
+  procedure btn1Click(Sender: TObject);
+  procedure FormCreate(Sender: TObject);
+    procedure btn2Click(Sender: TObject);
+    procedure edt4KeyPress(Sender: TObject; var Key: Char);
+
+    procedure edt6KeyPress(Sender: TObject; var Key: Char);
+    procedure edt8KeyPress(Sender: TObject; var Key: Char);
+    procedure edt9KeyPress(Sender: TObject; var Key: Char);
+    procedure edt5KeyPress(Sender: TObject; var Key: Char);
+    procedure edt7KeyPress(Sender: TObject; var Key: Char);
+  private
+    procedure SetProperty;
+    procedure StrScert;
+  public
+    { Public declarations }
+  end;
+
+var
+  Form1: TForm1;
+  agent: TWeb;
+  URL: string ='http://demo.initech.com';
+  SCert: string;
+  ResultStr: string;
+  Path:string;
+  ResultTemp :string;
+  INI: TINISafe6Ctrl;
+
+
+implementation
+
+uses Unit3;
+
+{$R *.dfm}
+
+procedure TForm1.SetProperty;
+
+begin
+
+
+    INI.SetProperty('certmanui_GPKI', 'all');
+    INI.DisableInvalidCert(false);
+    INI.SetProperty('certmanui_SendCertOnlyImgVerify', 'no');
+    INI.SetProperty('certmanui_securekey', 'inca2');
+    INI.SetProperty('certmanui_hsm', 'yes');
+    INI.SetProperty('certmanui_mediaBtnOrder', 'HDD|FDD|SDISK|HSM|PHONE|USIM');
+    INI.SetProperty('certmanui_sdiskdownloadurlandVersion', 'http://demo.initech.com/initech/plugin64/install_sdisk.htm|1,6,1');
+
+    INI.SetProperty('certmanui_phoneVer', '1,4,0,7');
+    INI.SetProperty('certmanui_phone', 'SHINHAN|https://bank.shinhan.com/sw/infovine/DownloadList&INITECH|KINGS_INFOVINE');
+    INI.SetProperty('certmanui_phoneURL', 'https://bank.shinhan.com/sw/infovine/download.html');
+    INI.SetProperty('certmanui_phoneServiceList', 'infovine|mobisign');
+
+    INI.SetProperty('certmanui_showalertbanner', 'yes');
+    INI.SetProperty('certmanui_alertbannerurl', '"http://demo.initech.com/initech/plugin/site/img/banner.gif"');
+
+    INI.SetProperty('certmanui_SelectCertUIMode', 'text');
+
+    INI.SetProperty('OldCertNotSafeMsg', '1');
+
+    INI.SetProperty('certmanui_screenkeyboardcheckmode', '1');
+
+    INI.SetProperty('UseCertMode', '1');
+    INI.SetProperty('OldCertNotSafeMsg', '1');
+
+    INI.SetProperty('certmanui_PasswordDlgImgDesc', 'false');
+end;
+function FName(ResultTemp : UTF8String): String;
+var
+  startline,endline : Integer;
+begin
+  startline := AnsiPos('"name"',ResultTemp);
+  ResultTemp := Copy( ResultTemp,startline+Length('"name"')+17,6);
+  Result := ResultTemp;
+end;
+function FJumin(ResultTemp : UTF8String): String;
+var
+  startline,endline : Integer;
+begin
+  startline := AnsiPos('"jumin"',ResultTemp);
+  ResultTemp := Copy( ResultTemp,startline+Length('"jumin"')+16,6);
+  Result := ResultTemp;
+end;
+function Fmoney(ResultTemp : UTF8String): String;
+var
+  startline,endline : Integer;
+begin
+  startline := AnsiPos('"addr"',ResultTemp);
+  ResultTemp := Copy( ResultTemp,startline+Length('"addr"')+17,4);
+  Result := ResultTemp;
+end;
+
+procedure TForm1.btn1Click(Sender: TObject);
+var
+  INIdata: string;
+  RandomURL: string;
+  eletemp: string;
+  Sentence:string;
+  Path: string;
+
+
+  DecRes: string;
+  ResultSen: string;
+
+
+  data : string;
+
+begin
+  StrScert;
+  SetProperty;
+  INI.LoadCert(SCert);
+  INI.InitCache();
+  Form3:=TForm3.Create(application);
+  if (INI<>nil) then
+  begin
+    RandomURL := URL +'/initech/plugin64/tools/Time.jsp';
+    Sentence:='&name=' + INI.URLEncode(edt1.Text) + '&jumin='+ INI.URLEncode(edt2.Text) +'&addr='+INI.URLEncode(edt3.Text);
+    //"__INIts__=1558510973&name=%c8%ab%b1%e6%b5%bf&jumin=760830-2245544&mail=hong@initech.com&tel=02-1234-5647&addr=%bc%ad%bf%ef%bd%c3+%bc%db%c6%c4%b1%b8+%b0%c5%bf%a9%b5%bf+559-23+%c7%f6%b4%eb%be%c6%c6%c4%c6%ae+3%b5%bf+10%c8%a3&hand=017-740-5455&cname=%28%c1%d6%29+%c0%cc%b4%cf%c5%d8&grade=%bf%ac%b1%b8%bf%f8&jobyear=15&ctel=02-2140-0000&money=30%2c000%2c000&money2=10%2c000%2c000&caddr=%bc%ad%bf%ef%bd%c3+%bc%db%c6%c4%b1%b8+%b0%c5%bf%a9%b5%bf+559-5+%c0%cc%b4%cf%c5%d8%ba%f4%b5%f95%c3%fe&amount=50%2c000%2c000&account=396-54-456611&inputaccount=345-85-451466&pass=1111"
+    Sentence := '__INIts__=' + INI.GetServerTime(URL+'/initech/plugin/tools/Time.asp')+ '&' + Sentence;
+    INIdata := INI.MakeINIpluginData( 11 , 'SEED-CBC'  , Sentence, RandomURL);
+    if   INIdata = '' then ShowMessage('실패')
+    else
+      begin
+       ShowMessage('성공');
+       Path := 'http://demo.initech.com/initech/demo/sign64/Sign2.jsp';
+       Sentence := 'INIpluginData='+StrReplace((agent.URLEncode(INIdata)),'=','%3D');
+       Sentence := 'INIpluginData='+StrReplace((agent.URLEncode(INIdata)),'&','%26');
+       agent.KeepAlive:= True;
+       agent.AlwaysPost:=True;
+       agent.Connect(Path, Sentence,'',False);
+       ResultTemp := agent.ResultStr;
+       edt4.Text := FName(ResultTemp);
+       edt5.Text := FJumin(ResultTemp);
+       edt6.Text := Fmoney(ResultTemp);
+      end;
+    btn2.Visible:=true;
+    end;
+  end;
+procedure TForm1.btn2Click(Sender: TObject);
+var
+  data : string;
+  INIdata:string;
+  Sentence :string;
+begin
+     //전자서명
+      data := URLEncode('성명') + '=' + URLEncode(edt4.Text);
+      data := data + URLEncode('주민등록번호') + '=' + URLEncode(edt5.Text);
+      data := data + URLEncode('주소') + '=' + URLEncode(edt6.Text);
+
+      INI.FilterCert('', 'SerialNumber=25032518');
+      INIdata := INI.IniSign('sha1', data, 'http://demo.initech.com/initech/plugin64/tools/Time.jsp', '신한은행 인터넷 대출업무 전자서명', '신한은행 인터넷 대출업무 전자서명');
+
+      {현코}
+      Sentence := 'PKCS7SignedData=' + INI.URLEncode(INIdata);
+      Sentence := Sentence + '&PKCS7SignTitle=' + INI.URLEncode('이니텍은행 전자서명');
+      Sentence := Sentence + '&PKCS7SignInfo=' + INI.URLEncode('이니텍은행 PKCS7 전자서명 데이터입니다. 이 전자서명 데이터는 국제공인 규격 ...');
+      Sentence := Sentence + '&PKCS7SignInfo=' + INI.URLEncode('explain');
+      Sentence := Sentence + '&name=' + INI.URLEncode(edt4.Text);
+      Sentence := Sentence + '&jumin=' + INI.URLEncode(edt5.Text);
+      Sentence := Sentence + '&addr=' + INI.URLEncode(edt6.text);
+      Sentence := Sentence + '&amount=' + INI.URLEncode('');
+      Sentence := Sentence + '&account=' + INI.URLEncode('');
+      Sentence := Sentence + '&account=' + INI.URLEncode('');
+      Sentence := Sentence + '&inputaccount=' + INI.URLEncode('');
+      Sentence := Sentence + '&inputaccount2=' + INI.URLEncode('');
+      Sentence := Sentence + '&pass=' + INI.URLEncode('');
+      Sentence := Sentence + '&SearchCondition=' + 'UserID';
+
+      //끝
+      Sentence := '__INIts__=' + INI.GetServerTime(URL+'/initech/plugin/tools/Time.asp')+ '&' + Sentence;
+      INIdata := INI.MakeINIpluginData( 10, 'SEED-CBC'  , Sentence,  'http://demo.initech.com/initech/plugin64/tools/Time.jsp');
+    if   INIdata = '' then ShowMessage(INIdata)
+    else
+    begin
+      ShowMessage('성공');
+
+      Path := 'http://demo.initech.com/initech/demo/sign64/Sign2.jsp';
+      Sentence := 'INIpluginData='+StrReplace((agent.URLEncode(INIdata)),'=','%3D');
+      Sentence := 'INIpluginData='+StrReplace((agent.URLEncode(INIdata)),'&','%26');
+
+      agent.KeepAlive:= True;
+      agent.AlwaysPost:=True;
+
+      agent.Connect(Path, Sentence,'',False);
+      ResultTemp := agent.ResultStr;
+
+      ShowMessage('서명완료');
+      edt7.Text:=FName(ResultTemp);
+      edt8.Text:=FJumin(ResultTemp);
+      edt9.Text:=Fmoney(ResultTemp);
+    end;
+
+end;
+
+procedure TForm1.StrScert;
+var
+  Path: string;
+  StrTemp: string;
+  index: integer;
+begin
+  SCert := '-----BEGIN CERTIFICATE-----'+#13#10;
+  SCert := SCert + 'MIIDuzCCAqOgAwIBAgIDAggUMA0GCSqGSIb3DQEBCwUAMFMxCzAJBgNVBAYTAktS'+#13#10;
+  SCert := SCert + 'MRAwDgYDVQQKEwdJTklURUNIMREwDwYDVQQLEwhQbHVnaW5DQTEfMB0GA1UEAxMW'+#13#10;
+  SCert := SCert + 'SU5JVEVDSCBQbHVnaW4gUm9vdCBDQTAeFw0xMDExMDgwNTMzMjRaFw0zMDExMDgw'+#13#10;
+  SCert := SCert + 'NTMzMjNaME4xCzAJBgNVBAYTAktSMRAwDgYDVQQKEwdJTklURUNIMRIwEAYDVQQL'+#13#10;
+  SCert := SCert + 'EwlJTklURUNIQ0ExGTAXBgNVBAMTEGRlbW8uaW5pdGVjaC5jb20wggEiMA0GCSqG'+#13#10;
+  SCert := SCert + 'SIb3DQEBAQUAA4IBDwAwggEKAoIBAQCZ9ihqwgQqr3mKylnlIdbQVCaBMuSdTuko'+#13#10;
+  SCert := SCert + 'ikylfF/M3f189Xgh8JzgLqzdOywCHWzQ/Hc1ok59IGeGrwlwcEawVmfsYo4KM79Z'+#13#10;
+  SCert := SCert + 'enDemZV6JDmXBtk8ESiY41/N3lW2TfW6DWsR1LApmBrjhxy+O/+MXdPDag2RM/Rl'+#13#10;
+  SCert := SCert + 'SPwsUEyqun4Qb80q3zoXe4LrFLzBUEH4FqiJYo1Qt+sKIAlEaMk8PcsMIAesvXtM'+#13#10;
+  SCert := SCert + 'H54pWwYWlcImMu6tOjJTbctdSPAhduKYu2STZG0seW8bvzuWoy5RDgLquze/jtYs'+#13#10;
+  SCert := SCert + 'DOBth6E2FUYeDGwlrDQngeBepVmWTCXHTYGYLIzsvRz8fZb+ZY3BAgMBAAGjgZww'+#13#10;
+  SCert := SCert + 'gZkwHwYDVR0jBBgwFoAUdZHynOrUueejpV93hNuhGg0Yi6UwHQYDVR0OBBYEFKQU'+#13#10;
+  SCert := SCert + 'gAvHY+WjsPL5wwAB1EPkhLTcMA4GA1UdDwEB/wQEAwIGwDAMBgNVHRMBAf8EAjAA'+#13#10;
+  SCert := SCert + 'MDkGA1UdHwQyMDAwLqAsoCqGKDExOC4yMTkuNTUuMTM5OjQ4MjAwL0NSTC9JTklU'+#13#10;
+  SCert := SCert + 'RUNIQ0ExMy5jcmwwDQYJKoZIhvcNAQELBQADggEBAGa0ZxXYBOSqFVFDnKosuOc8'+#13#10;
+  SCert := SCert + '9sEScz/2gr59Tff3FeEYqOjVaj7jmyTFW7h+gbygCOIjIOAGNKIrP4emKceaF7yQ'+#13#10;
+  SCert := SCert + 'xZyi6iwThj87piahQ7sjg7jSVBDWJzge35+4DJx6ikVE51DvNNpaIRr9PllTo8ch'+#13#10;
+  SCert := SCert + 'Pm8ybPlckK5NuYik9pvo7AvSAGKVOqjHI/ie9aJ8Y/6CQTnkbh1oPBRGyIeauWsd'+#13#10;
+  SCert := SCert + 'rFP2JhGAxa7CSen64A4QOukQLpb9+h2ncglfM23cU8ZBkhuQsCVZXNoRlmFoCGZR'+#13#10;
+  SCert := SCert + 'fHoWbrB7ta7qIdO2oT0cD5iBEHWeftmQVUPwWt8aa93g7Gj60UDelGbrroyeeaU='+#13#10;
+  SCert := SCert + '-----END CERTIFICATE-----';
+end;
+
+procedure TForm1.FormCreate(Sender: TObject);
+
+var
+  INI: TINISafe6Ctrl;
+begin
+  INI := TINISafe6Ctrl.Create(nil);
+  agent := Tweb.Create;
+  btn2.Hide;
+end;
+
+procedure TForm1.edt4KeyPress(Sender: TObject; var Key: Char);
+begin
+    key := #0;
+ end;
+
+
+procedure TForm1.edt6KeyPress(Sender: TObject; var Key: Char);
+begin
+    key := #0;
+end;
+
+procedure TForm1.edt8KeyPress(Sender: TObject; var Key: Char);
+begin
+    key := #0;
+end;
+
+procedure TForm1.edt9KeyPress(Sender: TObject; var Key: Char);
+begin
+    key := #0;
+end;
+
+procedure TForm1.edt5KeyPress(Sender: TObject; var Key: Char);
+begin
+    key := #0;
+end;
+
+procedure TForm1.edt7KeyPress(Sender: TObject; var Key: Char);
+begin
+    key := #0;
+end;
+
+end.

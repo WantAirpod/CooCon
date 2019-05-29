@@ -1,0 +1,86 @@
+F8  중단점을 그만하고 코드 계속 실행하기
+F10  다음 함수 코드로 이동하기
+F11  함수의 내부 코드로 이동 
+F11 + Shift  현재 함수에서 빠져나와 다음 함수로 이동하기
+
+
+var SCert = "-----BEGIN CERTIFICATE-----\n";
+SCert += "MIIDuzCCAqOgAwIBAgIDAggUMA0GCSqGSIb3DQEBCwUAMFMxCzAJBgNVBAYTAktS\n";
+SCert += "MRAwDgYDVQQKEwdJTklURUNIMREwDwYDVQQLEwhQbHVnaW5DQTEfMB0GA1UEAxMW\n";
+SCert += "SU5JVEVDSCBQbHVnaW4gUm9vdCBDQTAeFw0xMDExMDgwNTMzMjRaFw0zMDExMDgw\n";
+SCert += "NTMzMjNaME4xCzAJBgNVBAYTAktSMRAwDgYDVQQKEwdJTklURUNIMRIwEAYDVQQL\n";
+SCert += "EwlJTklURUNIQ0ExGTAXBgNVBAMTEGRlbW8uaW5pdGVjaC5jb20wggEiMA0GCSqG\n";
+SCert += "SIb3DQEBAQUAA4IBDwAwggEKAoIBAQCZ9ihqwgQqr3mKylnlIdbQVCaBMuSdTuko\n";
+SCert += "ikylfF/M3f189Xgh8JzgLqzdOywCHWzQ/Hc1ok59IGeGrwlwcEawVmfsYo4KM79Z\n";
+SCert += "enDemZV6JDmXBtk8ESiY41/N3lW2TfW6DWsR1LApmBrjhxy+O/+MXdPDag2RM/Rl\n";
+SCert += "SPwsUEyqun4Qb80q3zoXe4LrFLzBUEH4FqiJYo1Qt+sKIAlEaMk8PcsMIAesvXtM\n";
+SCert += "H54pWwYWlcImMu6tOjJTbctdSPAhduKYu2STZG0seW8bvzuWoy5RDgLquze/jtYs\n";
+SCert += "DOBth6E2FUYeDGwlrDQngeBepVmWTCXHTYGYLIzsvRz8fZb+ZY3BAgMBAAGjgZww\n";
+SCert += "gZkwHwYDVR0jBBgwFoAUdZHynOrUueejpV93hNuhGg0Yi6UwHQYDVR0OBBYEFKQU\n";
+SCert += "gAvHY+WjsPL5wwAB1EPkhLTcMA4GA1UdDwEB/wQEAwIGwDAMBgNVHRMBAf8EAjAA\n";
+SCert += "MDkGA1UdHwQyMDAwLqAsoCqGKDExOC4yMTkuNTUuMTM5OjQ4MjAwL0NSTC9JTklU\n";
+SCert += "RUNIQ0ExMy5jcmwwDQYJKoZIhvcNAQELBQADggEBAGa0ZxXYBOSqFVFDnKosuOc8\n";
+SCert += "9sEScz/2gr59Tff3FeEYqOjVaj7jmyTFW7h+gbygCOIjIOAGNKIrP4emKceaF7yQ\n";
+SCert += "xZyi6iwThj87piahQ7sjg7jSVBDWJzge35+4DJx6ikVE51DvNNpaIRr9PllTo8ch\n";
+SCert += "Pm8ybPlckK5NuYik9pvo7AvSAGKVOqjHI/ie9aJ8Y/6CQTnkbh1oPBRGyIeauWsd\n";
+SCert += "rFP2JhGAxa7CSen64A4QOukQLpb9+h2ncglfM23cU8ZBkhuQsCVZXNoRlmFoCGZR\n";
+SCert += "fHoWbrB7ta7qIdO2oT0cD5iBEHWeftmQVUPwWt8aa93g7Gj60UDelGbrroyeeaU=\n";
+SCert += "-----END CERTIFICATE-----\n";"http://demo.initech.com/initech/plugin64/tools/Time.jsp"
+
+"http://demo.initech.com/initech/plugin64/tools/Time.jsp"
+-timeurl
+
+
+
+    RandomURL := Hostpath + '/initech/plugin64/tools/Time.jsp';
+    Sentence := 'A=' + Inis.URLEncode(Edit1.Text)
+              + '&B=' + Inis.URLEncode(Edit2.Text)
+              + '&C=' + Inis.URLEncode(Edit3.Text)
+              ;
+    Sentence := '__INIts__=' + Inis.GetServerTime(Hostpath + '/initech/plugin/tools/Time.asp')
+              + '&' + Sentence
+              ;
+    Temp := Inis.MakeINIpluginData(10, 'SEED-CBC', Sentence, RandomURL);
+"http://demo.initech.com/initech/plugin64/tools/Time.jsp"
+
+
+
+function EncForm2(form1, form2) 
+{
+	var INIdata = "";
+	var eletemp = "";
+	var filetemp = "";
+
+	obj = ModuleInstallCheck(); 
+	if (obj == null) {
+		alert("암호화프레임(secureframe)을 찾을수 없습니다.");
+		return false;
+	}
+
+	filetemp = GatherFileValue(form1, 0, false);
+	if (filetemp !=  "") 
+	{
+		if ((form2.filedata.value = obj.MakeFileData(vf, cipher, filetemp)) == "") return false; 
+	}
+
+	eletemp = GatherValue(form1, 0, false);
+	
+	if ((INIdata = obj.MakeINIpluginData(vf, cipher, eletemp, TimeURL))=="") return false;
+
+	//add bye wakano 2001/01/29
+	if (typeof form2.INIpluginData == "undefined") 
+	{
+		if (ShinHan_plugin) // with for Shinhan Bank 
+		{
+			form2.input.value = INIdata;
+			form2.input.name = "INIpluginData"; // for Shinhan Bank
+		} else {
+			alert("INIpluginData(form.name)가 필요합니다.");
+			return false;
+		}
+	} else {
+		form2.INIpluginData.value = INIdata;
+	}
+
+   	return true;
+}

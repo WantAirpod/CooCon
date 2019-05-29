@@ -1,0 +1,106 @@
+■try finally 
+try
+	구문1
+finally
+	구문2
+end;
+구문 1에서 에러가 발생하든 안 하든 구문 2가 실행됨.
+try에서 에러가 발생해도 finally을 실행하며 exception 처리함.
+
+■try except 
+try 
+	구문1
+except
+	구문2
+end;
+구문 1에서 에러가 발생할 때에만 구문 2가 실행됨.
+	
+
+■ 반복문 while
+
+while문은 루프의 처음에서 조건이 오고 조건이 성립할 때 반복하는 문이다.
+(C에서의 while문에 해당)
+
+사용예
+
+ni := 0;
+while ni < 10 do
+begin
+  AA[i] := 0;
+  ni := ni + 1;
+end;
+
+■ 반복문 repeat until
+
+repeat until문은 루프의 마지막에서 조건이 오고 조건이 성립할 때 까지 반복하는 문이다.
+(C에서의 do while문과 비슷하지만 조금 틀리다.)
+
+사용예
+
+  ni := 0;
+  repeat
+    AA[ni] := 0;
+    ni := ni + 1;
+  until ni > 10;
+
+■ 반복문 for
+
+for문은 인덱스가 되는 값을 1씩 증가시키거나 감소시켜가며 반복하는 문이다.
+(C의 for보다 유연성이 떨어짐)
+
+  for ni := 0 to 9 do
+  begin
+    AA[ni] := ni;
+  end;
+
+인덱스를 감소시킬 때는 to 대신 downto를 써야된다.
+
+  for ni := 9 downto 0 do
+  begin
+    AA[ni] := ni;
+  end;
+
+
+■ 조건문 case
+
+case문은 복수의 선택을 할때 필요한 문을 실행할 수 있다.
+(C에서의 switch문에 해당한다.)
+
+사용예
+
+  case StrToInt(Edit1.Text) of
+    3 :
+      begin
+        Label1.Caption := '3';
+      end;
+    4 :
+      begin
+        Label1.Caption := '4';
+      end;
+    else
+      begin
+        Label1.Caption := 'XX';
+      end;
+  end;  
+  
+  
+■ Copy 함수
+설명
+시작번째 문자부터 문자갯수만큼 문자열을 잘라내어 출력한다.
+사용
+var
+  value1 : String;
+begin
+  value1 := 'leejunsik';
+  ShowMessage(Copy(value1,2,2));
+  // 2번째 문자부터 2글자를 출력(첫번째문자 1부터 시작)
+  // 'ee' 출력
+end;
+var
+  value1 : String;
+begin
+  value1 := '한글은아름답다';
+  ShowMessage(Copy(value1,1,2));
+  // 1번째 문자부터 2번째까지 출력(첫번째문자 1부터 시작, 한글절단 문제있음)
+  // '한' 출력
+end;

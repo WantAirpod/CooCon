@@ -1,0 +1,13 @@
+checkPage=2&flag=searchPage&regYear=1992&regMonth=04&regDate=09&name=%EC%B5%9C%EC%A7%84%EC%98%81&licenNo0=11&licenNo1=09&licenNo2=805217&licenNo3=12&ghostNo=62PV79
+
+
+
+ https://www.efine.go.kr/licen/truth/licenTruth.do?subMenuLv=010100
+
+---------------------------
+오류
+---------------------------
+checkPage=2&flag=searchPage&regYear=1992&regMonth=04&regDate=09&name=%EC%B5%9C%EC%A7%84%EC%98%81&licenNo0=11&licenNo1=09&licenNo2=805217&licenNo3=12&ghostNo=62PV79&hid_key_data=&hid_enc_data=
+---------------------------
+확인   
+---------------------------
