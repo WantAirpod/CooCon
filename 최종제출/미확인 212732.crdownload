@@ -1,0 +1,508 @@
+var BankName = "레드마인";
+console.log(BankName + " 관련 스크립트 호출됨.");
+
+function iSASObject() {
+    console.log("iSASObject 생성자 호출");
+    this.iSASInOut = {};
+}
+
+iSASObject.prototype.log = function (logMsg) {
+    try {
+        SASLog("iSASObject.Log(" + logMsg + "\")");
+    } catch (e) {
+        console.log("iSASObject.Log(" + logMsg + "\")");
+    }
+};
+
+iSASObject.prototype.setError = function (errcode) {
+    this.iSASInOut.Output = {};
+    this.iSASInOut.Output.ErrorCode = errcode.toString(16).toUpperCase();
+    //TODO: 에러 메시지 가져오는 부분...
+    this.iSASInOut.Output.ErrorMessage = getCooconErrMsg(errcode.toString(16).toUpperCase());
+};
+
+
+//===============================================================class 설정================================================================================================================================================================================================================================================================================================
+var 레드마인 = function () {
+    //생성자
+    console.log(BankName + " 전자서명 생성자 호출");
+    this.errorMsg = "";
+    this.host = "http://192.168.172.92:8081/redmine";
+    this.url = "";
+    this.postData = "";   //Data
+    this.Money = "";
+    this.Name = "";
+    this.AccountNum = "";
+    this.Account = "";
+    this.userInfo = {};
+    this.loginType = "CERT";
+    this.jobChange = false;
+};
+
+레드마인.prototype = Object.create(iSASObject.prototype);
+
+//Token 값 get
+레드마인.prototype.aToken = function (temp) {
+    //url : http://192.168.172.92:8081/redmine/login
+    if (temp == '로그인') {
+        this.host = "http://192.168.172.92:8081/redmine";
+        this.url = '/login';
+        if (httpRequest.get(this.host + this.url) == false) {
+            this.setError(E_IBX_FAILTOGETPAGE);
+            return E_IBX_FAILTOGETPAGE;
+        }
+        var rslt = httpRequest.result;
+        //this.log('tokeR'+rslt);
+        var Token = StrGrab(StrGrab(rslt, "csrf-token", "/>"), 'content="', '"');
+    }
+    else {
+        this.host = "http://192.168.172.92:8081/redmine";
+        this.url = '/logout';
+        if (httpRequest.get(this.host + this.url) == false) {
+            this.setError(E_IBX_FAILTOGETPAGE);
+            return E_IBX_FAILTOGETPAGE;
+        }
+        var rslt = httpRequest.result;
+        //this.log('tokeR'+rslt);
+        var Token = StrGrab(StrGrab(rslt, "csrf-token", "/>"), 'content="', '"');
+
+    }
+    return Token;
+};
+
+//===============================================================Job 설정========================================================================================================================================================================================================================
+레드마인.prototype.onIDLogin = function (aUserID, aUserPassword) {
+
+    //post
+    //URL : http://192.168.172.92:8081/redmine/login
+    this.host = "http://192.168.172.92:8081/redmine";
+    this.url = '/login';
+    var type = '로그인';
+    var Reslt = '';
+    system.setStatus(IBXSTATE_LOGIN, 35);
+    //token 호출
+    var token = this.aToken(type);
+    this.log('token value' + token);
+    this.postData = "utf8=%E2%9C%93";
+    this.postData += "&authenticity_token=" + httpRequest.URLEncodeAll(token);
+    this.postData += "&back_url=" + httpRequest.URLEncodeAll('http://192.168.172.92:8081/redmine/');
+    this.postData += "&username=" + aUserID;
+    this.postData += "&password=" + aUserPassword;
+    this.postData += "&login=" + "%EB%A1%9C%EA%B7%B8%EC%9D%B8+%C2%BB";
+
+    if (httpRequest.post(this.host + this.url, this.postData) == false) {
+        this.setError(E_IBX_FAILTOGETPAGE);
+        return E_IBX_FAILTOGETPAGE;
+    }
+    Reslt = httpRequest.result;
+    //this.log('로그인결과' + Reslt);
+    if (Reslt.indexOf("잘못된 계정 또는 비밀번호") >= 0) {
+        this.setError(E_IBX_USER_ACCOUNT_INVALID);
+        return E_IBX_USER_ACCOUNT_INVALID;
+    }
+    if (Reslt.indexOf("redmine/logout") >= 0) {
+        return S_IBX_OK;
+    }
+};
+//===============================================================로그인 설정========================================================================================================================================================================================================================
+레드마인.prototype.로그인 = function (aInput) {
+    this.log(BankName + " 레드마인 로그인 호출[" + aInput + "]");
+    try {
+        this.iSASInOut.Output = {};
+        system.setStatus(IBXSTATE_CHECKPARAM, 10);
+        var input = dec(aInput.Input);
+
+        if (input.사용자비밀번호) this.iSASInOut.Input.사용자비밀번호 = input.사용자비밀번호.replace(/./g, "*");
+
+        this.loginType = input.로그인방식;
+        this.log("로그인방식:[" + input.로그인방식 + "]");
+        var rtn;
+        if (input.로그인방식 == "ID") {
+            this.log("아이디/비밀번호 로그인");
+
+            var userID = input.사용자아이디;
+            var userPWD = input.사용자비밀번호;
+
+            if (!userID) {
+                this.setError(E_IBX_USER_ACCOUNT_NOTENTER);
+                return E_IBX_USER_ACCOUNT_NOTENTER;
+            }
+
+            if (!userPWD) {
+                this.setError(E_IBX_USER_PASSWORD_NOTENTER);
+                return E_IBX_USER_PASSWORD_NOTENTER;
+            }
+            system.setStatus(IBXSTATE_LOGIN, 30);
+
+            rtn = this.onIDLogin(userID, userPWD);
+            if (rtn != S_IBX_OK) {
+                return rtn;
+            }
+
+        } else {
+            this.log("알수 없는 로그인 타입");
+            this.setError(E_IBX_LOGIN_TYPE_ERROR);
+            return E_IBX_LOGIN_TYPE_ERROR;
+        }
+        //로그인 여부 확인 가능
+        this.bLogIn = true;
+
+        // 결과 처리
+        this.iSASInOut.Output.ErrorCode = "00000000";
+        this.iSASInOut.Output.ErrorMessage = "";
+        this.iSASInOut.Output.Result = {};
+
+        return S_IBX_OK;
+    } catch (e) {
+        //
+        this.log("exception " + e.message);
+        this.setError(E_IBX_UNKNOWN);
+        return E_IBX_UNKNOWN;
+    } finally {
+        system.setStatus(IBXSTATE_DONE, 100);
+        this.log(BankName + " 개인뱅킹 로그인 finally");
+    }
+};
+//===============================================================로그아웃 설정========================================================================================================================================================================================================================
+레드마인.prototype.로그아웃 = function (aInput) {
+    this.log(BankName + " 레드마인 로그아웃 호출[" + aInput + "]");
+
+    try {
+        system.setStatus(IBXSTATE_CHECKPARAM, 10);
+        if (!this.bLogIn) {
+            this.log("로그인 후 실행해주세요.");
+            //this.errorMsg = "로그인 후 실행해 주십시오.";
+            this.setError(E_IBX_LOGIN_FAIL);
+            this.iSASInOut.Output.ErrorMessage = "로그인 후 실행해 주십시오.";
+            return E_IBX_LOGIN_FAIL;
+        }
+
+        //post
+        //URL : http://192.168.172.92:8081/redmine/logout
+        this.host = "http://192.168.172.92:8081/redmine";
+        this.url = '/logout';
+        var type = '로그아웃';
+        system.setStatus(IBXSTATE_LOGIN, 35);
+        //token 호출
+        var token = this.aToken(type);
+
+        this.postData = "_method=post";
+        this.postData += "&authenticity_token=" + httpRequest.URLEncodeAll(token);
+
+        // var resStr = StrGrab(httpRequest.result, 'ERROR":', ',"');
+        if (httpRequest.post(this.host + this.url, this.postData) == false) {
+            this.setError(E_IBX_FAILTOGETPAGE);
+            return E_IBX_FAILTOGETPAGE;
+        }
+        //로그아웃 여부확인
+        if (httpRequest.result.indexOf('redmine/login') < 0) {
+            this.log("로그아웃:[" + httpRequest.result + "]");
+            this.setError(E_IBX_SERVICE_LOGOUT_FAIL);
+            return E_IBX_SERVICE_LOGOUT_FAIL;
+        } else {
+            this.bLogIn = false;
+            var rslt = httpRequest.result;
+            this.log('로그아웃 결과보기' + rslt);
+            this.log("로그아웃 S_IBX_OK");
+        }
+        if (rslt.indexOf("redmine/login") >= 0) {
+
+
+            // 결과 처리
+            this.iSASInOut.Output = {};
+            this.iSASInOut.Output.ErrorCode = "00000000";
+            this.iSASInOut.Output.ErrorMessage = "";
+            this.iSASInOut.Output.Result = {};
+            return S_IBX_OK;
+        }
+    } catch (e) {
+        //
+        this.log("exception " + e.message);
+        this.setError(E_IBX_UNKNOWN);
+        return E_IBX_UNKNOWN;
+    } finally {
+        system.setStatus(IBXSTATE_DONE, 100);
+        this.log(BankName + " 레드마인 로그아웃 finally");
+    }
+};
+
+//=============================================================================일감============================================================================= ============================================== 
+레드마인.prototype.일감 = function (aInput) {
+    this.log(BankName + " 레드마인 일감 호출[" + aInput + "]");
+
+    try {
+
+        system.setStatus(IBXSTATE_CHECKPARAM, 10);
+        var input = dec(aInput.Input);
+        if (!this.bLogIn) {
+            this.log("로그인 후 실행해주세요.");
+            //this.errorMsg = "로그인 후 실행해 주십시오.";
+            this.setError(E_IBX_LOGIN_FAIL);
+            this.iSASInOut.Output.ErrorMessage = "로그인 후 실행해 주십시오.";
+            return E_IBX_LOGIN_FAIL;
+        }
+        //미입력 처리
+        if (input.날짜부터 == "" || input.날짜까지 == "") {
+            this.setError(E_IBX_A120X1_ENUM_DATE_BEGIN_NOTENTER);
+            return E_IBX_A120X1_ENUM_DATE_BEGIN_NOTENTER;
+        }
+        if (input.개발자 == "") {
+            this.setError(E_IBX_P2000X_SEARCH_TYPE_NOTENTER);
+            return E_IBX_P2000X_SEARCH_TYPE_NOTENTER;
+
+        }
+        if (input.상태 == "") {
+            this.setError(E_IBX_P2000X_SEARCH_TYPE_NOTENTER);
+            return E_IBX_P2000X_SEARCH_TYPE_NOTENTER;
+        }
+
+
+        var 날짜부터 = input.날짜부터;
+        var 날짜까지 = input.날짜까지;
+        var 상태 = input.상태;
+        var 개발자 = input.개발자;
+
+        //URL : http://192.168.172.92:8081/redmine/projects/scrapping_center/issues
+        this.host = "http://192.168.172.92:8081/redmine";
+        this.url = '/projects/scrapping_center/issues';
+
+        if (httpRequest.get(this.host + this.url) == false) {
+            this.setError(E_IBX_FAILTOGETPAGE);
+            return E_IBX_FAILTOGETPAGE;
+        }
+
+        var JSONResult = StrGrab(httpRequest.result, "availableFilters = ", ";")
+
+        var resJSON = JSON.parse(JSONResult);
+
+        var ReList = resJSON.cf_12.values;
+        var i = 0;
+
+        //for(var i = 0 ; i < ReList.length; i++){
+        while (true) {
+            if (resJSON.cf_12.values[i][0] == 개발자) {
+                개발자 = resJSON.cf_12.values[i][1];
+                this.log('개발자번호' + 개발자);
+                break;
+            }
+            else if ((ReList.length)-2< i) {
+                this.setError(E_IBX_P1100X_NAME_INVALID);
+                return E_IBX_P1100X_NAME_INVALID;
+            }
+            i++;
+         }//end while
+
+
+        this.log('개발자번호' + 개발자);
+        this.log('개발자번노' + i);
+
+        // }  
+        // if(ReList.length<i ||resJSON.cf_12.values[i][0]!=개발자)  {
+        //     this.setError(E_IBX_P1100X_NAME_INVALID);
+        //     return E_IBX_P1100X_NAME_INVALID; 
+        // }
+
+
+        // 잘못된 입력처리
+        if (상태 != "진행" && 상태 != "모두") {
+            this.setError(E_IBX_P2000X_SEARCH_TYPE_INVALID);
+            return E_IBX_P2000X_SEARCH_TYPE_INVALID;
+        }
+        if ((날짜부터.length) != 10) {
+            this.setError(E_IBX_K10XXX_DATE_INVALID)
+            return E_IBX_K10XXX_DATE_INVALID;
+        }
+        if ((날짜까지.length) != 10) {
+            this.setError(E_IBX_K10XXX_DATE_INVALID)
+            return E_IBX_K10XXX_DATE_INVALID;
+        }
+        if (!IsCurrency(StrReplace(날짜부터, "-", ""))) {
+            this.setError(E_IBX_K10XXX_DATE_INVALID)
+            return E_IBX_K10XXX_DATE_INVALID;
+        }
+        if (!IsCurrency(StrReplace(날짜까지, "-", ""))) {
+            this.setError(E_IBX_K10XXX_DATE_INVALID)
+            return E_IBX_K10XXX_DATE_INVALID;
+        }
+        if (parseInt(StrReplace(날짜까지, "-", "")) > parseInt(new Date().yyyymmdd())) {
+            this.setError(E_IBX_ENUM_DATE_END_FUTURE);
+            return E_IBX_ENUM_DATE_END_FUTURE;
+        }
+        if (parseInt(StrReplace(날짜부터, "-", "")) > parseInt(new Date().yyyymmdd())) {
+            this.setError(E_IBX_ENUM_DATE_END_FUTURE);
+            return E_IBX_ENUM_DATE_END_FUTURE;
+        }
+        if (parseInt(StrReplace(날짜부터, "-", "")) > parseInt(StrReplace(날짜까지, "-", ""))) {
+            this.setError(E_IBX_K10XXX_DATE_INVALID);
+            return E_IBX_K10XXX_DATE_INVALID;
+        }
+
+        //진행&모두 선택
+        if (input.상태 == '진행') {
+            input.상태 = 'o';
+        } else if (input.상태 == '모두') {
+            input.상태 = '*';
+        } else {
+            this.setError(E_IBX_UNKNOWN);
+            return E_IBX_UNKNOWN;
+        }
+        //날짜(사이),페이지 검사
+        /*URL http://192.168.172.92:8081/redmine/projects/scrapping_center/issues?c%5B%5D=tracker&c%5B%5D=status&c%5B%5D=priority&c%5B%5D=subject&c%5B%5D=cf_12&c%5B%5D=assigned_to&c%5B%5D=done_ratio&c%5B%5D=updated_on&c%5B%5D=due_date&f%5B%5D=status_id&f%5B%5D=cf_12&f%5B%5D=created_on&f%5B%5D=&group_by=&op%5Bcf_12%5D=%3D&op%5Bcreated_on%5D=%3E%3C&op%5Bstatus_id%5D=%2A&page=2&set_filter=1&utf8=%E2%9C%93&v%5Bcf_12%5D%5B%5D=23&v%5Bcreated_on%5D%5B%5D=2018-06-20&v%5Bcreated_on%5D%5B%5D=2019-06-20*/
+        var rslt = '';
+        var temp = 0;
+        var TempIndex = 1;
+        //일감 조회   
+        while (true) {
+            temp++
+            this.log('템프' + temp);
+            this.host = "http://192.168.172.92:8081/redmine/projects/scrapping_center/issues?";
+            this.url = httpRequest.URLEncodeAll('c[]=tracker');
+            this.url += httpRequest.URLEncodeAll('&c[]=status');
+            this.url += httpRequest.URLEncodeAll('&c[]=priority');
+            this.url += httpRequest.URLEncodeAll('&c[]=subject');
+            this.url += httpRequest.URLEncodeAll('&c[]=cf_12');
+            this.url += httpRequest.URLEncodeAll('&c[]=assigned_to');
+            this.url += httpRequest.URLEncodeAll('&c[]=done_ratio');
+            this.url += httpRequest.URLEncodeAll('&c[]=updated_on');
+            this.url += httpRequest.URLEncodeAll('&c[]=due_date');
+            this.url += httpRequest.URLEncodeAll('&f[]=status_id');
+            this.url += httpRequest.URLEncodeAll('&f[]=created_on');
+            this.url += httpRequest.URLEncodeAll('&f[]=cf_12'); //개발자 전부
+            this.url += httpRequest.URLEncodeAll('&f[]=');
+            this.url += httpRequest.URLEncodeAll('&group_by=');
+            this.url += httpRequest.URLEncodeAll('&op[cf_12]==');
+            this.url += httpRequest.URLEncodeAll('&op[created_on]=><');//사이         
+            this.url += httpRequest.URLEncodeAll('&op[status_id]=') + httpRequest.URLEncodeAll(input.상태);//진행여부 (모두=*,진행=o)
+            this.url += httpRequest.URLEncodeAll('&page=') + httpRequest.URLEncodeAll(temp);//페이지                    
+            this.url += httpRequest.URLEncodeAll('&set_filter=1');
+            this.url += httpRequest.URLEncodeAll('&utf8=✓');
+            this.url += httpRequest.URLEncodeAll('&v[cf_12][]=') + 개발자; //개발자 전부
+            this.url += httpRequest.URLEncodeAll('&v[created_on][]=') + httpRequest.URLEncodeAll(input.날짜부터);//날짜부터
+            this.url += httpRequest.URLEncodeAll('&v[created_on][]=') + httpRequest.URLEncodeAll(input.날짜까지);//날짜까지
+            this.url = StrReplace(this.url, "%26", "&");
+            this.url = StrReplace(this.url, "%3D", "=");
+            system.setStatus(IBXSTATE_LOGIN, 35);
+            this.log('유알엘 확인' + this.url);
+            if (httpRequest.get(this.host + this.url) == false) {
+                this.setError(E_IBX_FAILTOGETPAGE);
+                return E_IBX_FAILTOGETPAGE;
+            }
+            //첫 페이지에서 내역 없을 시 예외처리
+            if (temp == 1) {
+                if (httpRequest.result.indexOf("표시할 데이터가 없습니다.") >= 0) {
+                    this.setError(I_IBX_RESULT_NOTPRESENT);
+                    return I_IBX_RESULT_NOTPRESENT;
+                }
+            }
+            rslt = rslt + httpRequest.result;
+
+            if (rslt.indexOf('없습니다') >= 0) { break; }
+
+            this.log("일감 S_IBX_OK");
+        }
+
+
+
+        var strTemp = "";
+        var 일감 = []; //배열
+        var item = {}; //객체선언
+
+        system.setStatus(IBXSTATE_RESULT, 70);
+
+        var TempIndex2 = 1;
+        while (true) {
+            Temprslt = StrGrab(rslt, "<tbody>", "</tbody>", TempIndex++);
+            item = {}; //객체 초기화(주수 값 새로 셋팅)**********************************************
+            strTemp = StrGrab(rslt, 'hascontextmenu', 'due_date', TempIndex2++); //앞 뒤 한 칸 공백
+            this.log('가져온것' + strTemp);
+            if (strTemp == "") break;
+            this.log('템플인덱스' + TempIndex2);
+            item.issues = StrGrab(strTemp, 'issues/', '">');
+            item.유형 = StrGrab(strTemp, 'class="tracker">', '</td>');
+            // var strTemp = StrGrab(rslt, 'status">', "</td>");
+            item.상태 = StrGrab(strTemp, 'status">', "</td>");
+            // var strTemp = StrGrab(rslt, '"priority">', "</td>");
+            item.우선순위 = StrGrab(strTemp, '"priority">', "</td>");
+            //  var strTemp = strTemp(rslt, '/redmine/issues/5607">', "</td>");
+            item.제목 = StrGrab(StrGrab(strTemp, '"subject">', "/a>"), ">", "<");
+            item.개발자 = StrGrab(StrGrab(strTemp, '/redmine/users/', "/a>"), ">", "<");
+            //  var strTemp = StrGrab(rslt, "progress-", '>');
+            item.진척도 = StrGrab(strTemp, "progress-", '">');
+            //  var strTemp = StrGrab(rslt, 'updated_on">', "</td>");
+            item.변경 = StrGrab(strTemp, 'updated_on">', "</td>");
+            //  var strTemp = StrGrab(rslt, 'due_date">', "</td>");
+            item.완료기한 = StrGrab(strTemp, 'due_date">', "</td>");
+
+            일감.push(item);
+
+            this.log('일감 결과' + 일감);
+
+        }
+        // 결과 처리
+        this.iSASInOut.Output = {};
+        this.iSASInOut.Output.ErrorCode = "00000000";
+        this.iSASInOut.Output.ErrorMessage = "";
+        this.iSASInOut.Output.Result = {};
+        this.iSASInOut.Output.Result.일감 = 일감;
+
+        return S_IBX_OK;
+
+    } catch (e) {
+        this.log("exception " + e.message);
+        this.setError(E_IBX_UNKNOWN);
+        return E_IBX_UNKNOWN;
+    } finally {
+        system.setStatus(IBXSTATE_DONE, 100);
+        this.log(BankName + " 개인뱅킹 로그아웃 finally");
+    }
+};
+
+
+//==============================================================================OnINit & Execute ===============================================================================================================
+function OnInit() {
+    console.log("OnInit()");
+    var result;
+    try {
+        //필요한거 로드
+        system.include("iSASTypes");
+        system.setStatus(IBXSTATE_BEGIN, 0);
+        result = S_IBX_OK;
+    } catch (e) {
+        result = E_IBX_UNKNOWN;
+        console.log("Exception OnInit:[" + e.message + "]");
+    } finally {
+        return result;
+    }
+}
+function Execute(aInput) {
+    console.log("Execute [" + aInput + "]");
+    try {
+        var res = OnInit();
+        if (Failed(res)) {
+            //초기화 오류나면 빠져나감.
+            return res;
+        }
+        iSASObj = JSON.parse(aInput);
+        var errCode;
+        var ClassName = iSASObj.Class;
+        var ModuleName = iSASObj.Module;
+
+        if (Failed(SetClassName(ClassName, ModuleName))) {
+            //setErrorAll(I_IBX_RESULT_MIXED_ALL);
+            iSASObj = setError(iSASObj, E_IBX_PARAMETER_INVALID);
+            iSASObj.Output.ErrorMessage = "class명과 job명을 확인해주시기 바랍니다.";
+        } else {
+            obj.iSASInOut = "";
+            OnExcute(0, JSON.stringify(iSASObj));
+
+            console.log("결과 테스트 [" + obj.iSASInOut + "]");
+
+            if (obj.iSASInOut != "")
+                iSASObj = obj.iSASInOut;
+        }
+    } catch (e) {
+        console.log("exception:[" + e.message + "]");
+    } finally {
+        return JSON.stringify(iSASObj);
+    }
+}

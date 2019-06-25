@@ -1,0 +1,301 @@
+var BankName = "전자서명";
+console.log(BankName + " 관련 스크립트 호출됨.");
+
+function iSASObject() {
+    console.log("iSASObject 생성자 호출");
+    this.iSASInOut = {};
+}
+
+iSASObject.prototype.log = function (logMsg) {
+    try {
+        SASLog("iSASObject.Log(" + logMsg + "\")");
+    } catch (e) {
+        console.log("iSASObject.Log(" + logMsg + "\")");
+    }
+};
+
+iSASObject.prototype.setError = function (errcode) {
+    this.iSASInOut.Output = {};
+    this.iSASInOut.Output.ErrorCode = errcode.toString(16).toUpperCase();
+    //TODO: 에러 메시지 가져오는 부분...
+    this.iSASInOut.Output.ErrorMessage = getCooconErrMsg(errcode.toString(16).toUpperCase());
+};
+//===============================================================class 설정================================================================================================================================================================================================================================================================================================
+var 전자서명 = function () {
+    //생성자
+    console.log(BankName + " 전자서명 생성자 호출");
+    this.errorMsg = "";
+    this.host = "http://demo.initech.com/";
+    this.url = "";
+    this.postData = "";   //Data
+    this.Money = "";
+    this.Name = "";
+    this.AccountNum = "";
+    this.Account = "";
+    this.userInfo = {};
+    this.loginType = "CERT";
+    this.jobChange = false;
+};
+
+전자서명.prototype = Object.create(iSASObject.prototype);
+
+//===============================================================Job 설정========================================================================================================================================================================================================================
+전자서명.prototype.서명정보 = function (aInput) {
+    this.log(BankName + " 전자서명 로그인 호출[" + aInput + "]");
+
+    try {
+        this.host = "http://demo.initech.com";
+        this.iSASInOut.Output = {};
+
+        system.setStatus(IBXSTATE_CHECKPARAM, 10);
+        //input dec 함수 
+        var input = dec(aInput.Input);
+        //인증서 비밀번호 마스킹 처리 
+        if (input.비밀번호) this.iSASInOut.Input.비밀번호 = input.비밀번호.replace(/./g, "*");
+        if (input.인증서 && input.인증서.비밀번호) this.iSASInOut.Input.인증서.비밀번호 = input.인증서.비밀번호.replace(/./g, "*");
+        //비번 마스킹처리
+        if (input.비번) this.iSASInOut.Input.비번 = input.비밀번호.replace(/./g, "*");
+        if (input.인증서 && input.인증서.비번) this.iSASInOut.Input.인증서.비번 = input.인증서.비번.replace(/./g, "*");
+
+        this.loginType = input.로그인방식;
+        this.log("로그인방식:[" + input.로그인방식 + "]");
+
+
+        if (input.로그인방식 == "CERT") {
+            this.log("인증서 로그인");
+
+            //LoadCert 
+            var scert = "-----BEGIN CERTIFICATE-----" +
+                "MIIDuzCCAqOgAwIBAgIDAggUMA0GCSqGSIb3DQEBCwUAMFMxCzAJBgNVBAYTAktS" +
+                "MRAwDgYDVQQKEwdJTklURUNIMREwDwYDVQQLEwhQbHVnaW5DQTEfMB0GA1UEAxMW" +
+                "SU5JVEVDSCBQbHVnaW4gUm9vdCBDQTAeFw0xMDExMDgwNTMzMjRaFw0zMDExMDgw" +
+                "NTMzMjNaME4xCzAJBgNVBAYTAktSMRAwDgYDVQQKEwdJTklURUNIMRIwEAYDVQQL" +
+                "EwlJTklURUNIQ0ExGTAXBgNVBAMTEGRlbW8uaW5pdGVjaC5jb20wggEiMA0GCSqG" +
+                "SIb3DQEBAQUAA4IBDwAwggEKAoIBAQCZ9ihqwgQqr3mKylnlIdbQVCaBMuSdTuko" +
+                "ikylfF/M3f189Xgh8JzgLqzdOywCHWzQ/Hc1ok59IGeGrwlwcEawVmfsYo4KM79Z" +
+                "enDemZV6JDmXBtk8ESiY41/N3lW2TfW6DWsR1LApmBrjhxy+O/+MXdPDag2RM/Rl" +
+                "SPwsUEyqun4Qb80q3zoXe4LrFLzBUEH4FqiJYo1Qt+sKIAlEaMk8PcsMIAesvXtM" +
+                "H54pWwYWlcImMu6tOjJTbctdSPAhduKYu2STZG0seW8bvzuWoy5RDgLquze/jtYs" +
+                "DOBth6E2FUYeDGwlrDQngeBepVmWTCXHTYGYLIzsvRz8fZb+ZY3BAgMBAAGjgZww" +
+                "gZkwHwYDVR0jBBgwFoAUdZHynOrUueejpV93hNuhGg0Yi6UwHQYDVR0OBBYEFKQU" +
+                "gAvHY+WjsPL5wwAB1EPkhLTcMA4GA1UdDwEB/wQEAwIGwDAMBgNVHRMBAf8EAjAA" +
+                "MDkGA1UdHwQyMDAwLqAsoCqGKDExOC4yMTkuNTUuMTM5OjQ4MjAwL0NSTC9JTklU" +
+                "RUNIQ0ExMy5jcmwwDQYJKoZIhvcNAQELBQADggEBAGa0ZxXYBOSqFVFDnKosuOc8" +
+                "9sEScz/2gr59Tff3FeEYqOjVaj7jmyTFW7h+gbygCOIjIOAGNKIrP4emKceaF7yQ" +
+                "xZyi6iwThj87piahQ7sjg7jSVBDWJzge35+4DJx6ikVE51DvNNpaIRr9PllTo8ch" +
+                "Pm8ybPlckK5NuYik9pvo7AvSAGKVOqjHI/ie9aJ8Y/6CQTnkbh1oPBRGyIeauWsd" +
+                "rFP2JhGAxa7CSen64A4QOukQLpb9+h2ncglfM23cU8ZBkhuQsCVZXNoRlmFoCGZR" +
+                "fHoWbrB7ta7qIdO2oT0cD5iBEHWeftmQVUPwWt8aa93g7Gj60UDelGbrroyeeaU=" +
+                "-----END CERTIFICATE-----";
+
+            if (!certManager.LoadCert(scert)) {
+                this.log("서버 인증서를 설정할 수 없습니다.");
+            } else {
+                this.log("LoadCert 성공");
+            }; //end LoadCert
+
+            var certpath = input.인증서.이름;
+            var password = input.인증서.비밀번호;
+            //(1)인증서,인증서 이름 미입력 체크
+            if (!input.인증서 || (!input.인증서.이름)) {
+                this.setMultiError(input, E_IBX_KEY_ACCOUNT_INFO_1_NOTENTER);
+                return E_IBX_KEY_ACCOUNT_INFO_1_NOTENTER;
+            }
+            //(2)인증서 비밀번호 체크
+            if (!password) {
+                this.setError(E_IBX_KEY_ACCOUNT_PASSWORD_1_NOTENTER);
+                return E_IBX_KEY_ACCOUNT_PASSWORD_1_NOTENTER;
+            }
+            //(3)인증서 경로 체크
+            if (!certpath) {
+                this.setError(E_IBX_KEY_ACCOUNT_INFO_1_NOTENTER);
+                return E_IBX_KEY_ACCOUNT_INFO_1_NOTENTER;
+            }
+
+            system.setStatus(IBXSTATE_LOGIN, 30);
+
+//===============================================================인증서 찾기================================================================================================================================================================================================================================================================================================
+            //(4)인증서 findCert
+            if (!certManager.findCert(JSON.stringify(input.인증서))) {
+                this.log("인증서를 찾을 수 없습니다.");
+                this.setError(E_IBX_CERTIFY_NOT_FOUND);
+                return E_IBX_CERTIFY_NOT_FOUND;
+            } else {
+                this.log("인증서 찾음.");
+            }
+            //(5)비밀번호 판단
+            if (!certManager.verifyPassword(password)) {
+                this.log("certManager.verifyPassword 실패");
+                this.setError(E_IBX_KEY_ACCOUNT_PASSWORD_1_INVALID);
+                return E_IBX_KEY_ACCOUNT_PASSWORD_1_INVALID;
+            } else {
+                this.log("certManager.verifyPassword 성공");
+            }
+//==============================================================================입력 예외 처리===============================================================================================================
+            //(6)잘못된 계좌 번호
+            if ((input.인증서.담보계좌번호 <= 0) || (!input.인증서.담보계좌번호)) {
+                this.setError(E_IBX_ACCOUNT_NO_NOTENTER);
+                return E_IBX_ACCOUNT_NO_NOTENTER;
+            }
+            if ((input.인증서.대출금입금계좌 <= 0) || (!input.인증서.대출금입금계좌)) {
+                this.setError(E_IBX_ACCOUNT_NO_NOTENTER);
+                return E_IBX_ACCOUNT_NO_NOTENTER;
+            }
+            //(7)잘못된 계좌번호 숫자
+            if (!IsCurrency(input.인증서.담보계좌번호) || !IsCurrency(input.인증서.대출금입금계좌)) {
+                this.setError(E_IBX_ACCOUNT_NO_INVALID);
+                return E_IBX_ACCOUNT_NO_INVALID;
+            }
+            //(8) 계좌관련 예외처리
+            if (!input.인증서.비번) {
+                this.setError(E_IBX_USER_PASSWORD_NOTENTER);
+                return E_IBX_USER_PASSWORD_NOTENTER;
+            }
+            //(9)대출금액 미입력 예외처리
+            if (!input.인증서.대출금액) {
+                this.setError(E_IBX_REMIT_AMOUNT_NOTENTER);
+                return E_IBX_REMIT_AMOUNT_NOTENTER;
+            }
+            //(10)잘못된 대출금액 (숫자미입력)
+            if (!IsCurrency(input.인증서.대출금액) || !IsCurrency(input.인증서.대출금액)) {
+                this.setError(E_IBX_REMIT_AMOUNT_INVALID);
+                return E_IBX_REMIT_AMOUNT_INVALID;
+            }
+            //(11) 잘못된 대출금액 처리(숫자)
+            if (!IsCurrency(input.인증서.대출금액)) {
+                this.setError(E_IBX_ACCOUNT_NO_INVALID);
+                return E_IBX_ACCOUNT_NO_INVALID;
+            }
+      
+//===============================================================전자 서명========================================================================================================================================================================================================================
+            var data;
+            data = httpRequest.URLEncodeAll("성명") + "=" + httpRequest.URLEncodeAll('홍길동' , 'UTF-8');
+            data += httpRequest.URLEncodeAll("주민등록번호") + "=" + httpRequest.URLEncodeAll("1234-1234", 'UTF-8');
+            data += httpRequest.URLEncodeAll("주소") + "=" + httpRequest.URLEncodeAll("서울시", 'UTF-8');
+            var Certdata = certManager.PKCS7SignData(data, password);
+            //(12)서명데이터 공백 및 undefined 처리
+            if (data.indexOf("undefined")>0 || data =='' ){
+                this.setError(E_IBX_FAILTOGETPAGE);
+                return E_IBX_FAILTOGETPAGE;
+            }
+            //(13)서명데이터 공백 및 undefined 처리
+            if (Certdata == "" || Certdata == undefined) {
+                this.log('공백 체크' + Certdata);
+                this.setError(E_IBX_FAILTOGETPAGE);
+                return E_IBX_FAILTOGETPAGE;
+            }
+            var Query = 'PKCS7SignedData=' + httpRequest.URLEncodeAll(Certdata, "EUC-KR");
+            Query = Query + '&name=' + httpRequest.URLEncodeAll(input.인증서.성함, "EUC-KR");
+            Query = Query + '&amount=' + httpRequest.URLEncodeAll(input.인증서.대출금액);
+            Query = Query + '&account=' + httpRequest.URLEncodeAll(input.인증서.담보계좌번호);
+            Query = Query + '&inputaccount=' + httpRequest.URLEncodeAll(input.인증서.대출금입금계좌);
+            Query = Query + '&pass=' + httpRequest.URLEncodeAll(input.인증서.비번);
+            Query = Query + '&SearchCondition=' + 'UserID';
+            Query = "__INIts__=" + '&' + Query;
+
+            var timeURL = "http://demo.initech.com/initech/plugin64/tools/Time.jsp";
+            var encData10 = certManager.MakeINIpluginData(10, Query, "", timeURL);
+            this.postData = "INIpluginData=" + httpRequest.URLEncodeAll(encData10, "UTF-8");
+
+            this.host = "http://demo.initech.com";
+            this.url = "/initech/demo/sign64/Sign1_Result.jsp";
+            //*경로 :  http://demo.initech.com/initech/demo/sign64/Sign1_Result.jsp
+            if (httpRequest.post(this.host + this.url, this.postData) == false) {
+                this.setError(E_IBX_FAILTOGETPAGE);
+                return E_IBX_FAILTOGETPAGE;
+            }
+            system.setStatus(IBXSTATE_CHECKPARAM, 80);
+            this.log("최종데이터" + httpRequest.result + "]");
+
+            var Resultstr = httpRequest.result;
+            //
+            if (!Resultstr.indexOf('SUCCESS') < 0) {
+                this.setError(E_IBX_INVALID_CODESIGN);
+                this.log("실패");
+                return E_IBX_INVALID_CODESIGN;
+            }
+//=============================================================================통신 후 결과 처리============================================================================= ============================================== 
+            var 성함 = StrGrab(StrGrab(Resultstr, '성명</td>', '</tr><p>'), '<td>', '</td>');
+            var 대출금액 = StrGrab(StrGrab(Resultstr, '대출금액</td>', '</tr><p>'), '<td>', '</td>');
+            var 담보계좌번호 = StrGrab(StrGrab(Resultstr, '담보계좌번호</td>', '</tr><p>'), '<td>', '</td>');
+            var 대출금입금계좌 = StrGrab(StrGrab(Resultstr, '대출금 입금계좌</td>', '</tr><p>'), '<td>', '</td>');
+            var 비번 = StrGrab(StrGrab(Resultstr, '비밀번호</td>', '</tr><p>'), '<td>', '</td>');
+        }
+        else {
+            this.log("알수 없는 로그인 타입");
+            this.setError(E_IBX_LOGIN_TYPE_ERROR);
+            return E_IBX_LOGIN_TYPE_ERROR;
+        }// end 로그인방식
+
+//==============================================================================결과 값 처리===============================================================================================================
+
+        this.bLogIn = true;
+        this.iSASInOut.Output.ErrorCode = "00000000";
+        this.iSASInOut.Output.ErrorMessage = "";
+        this.iSASInOut.Output.Result = {};
+        this.iSASInOut.Output.Result.성함 = 성함;
+        this.iSASInOut.Output.Result.대출금액 = 대출금액;
+        this.iSASInOut.Output.Result.비번 = 비번;
+        this.iSASInOut.Output.Result.담보계좌번호 = 담보계좌번호;
+        this.iSASInOut.Output.Result.대출금입금계좌 = 대출금입금계좌;
+
+        return S_IBX_OK;
+
+    } catch (e) {
+        //
+        this.log("exception " + e.message);
+        this.setError(E_IBX_UNKNOWN);
+        return E_IBX_UNKNOWN;
+    } finally {
+        system.setStatus(IBXSTATE_DONE, 100);
+        this.log(BankName + " 전자서명 로그인 finally");
+    }
+};
+
+function OnInit() {
+    console.log("OnInit()");
+    var result;
+    try {
+        //필요한거 로드
+        system.include("iSASTypes");
+        system.setStatus(IBXSTATE_BEGIN, 0);
+        result = S_IBX_OK;
+    } catch (e) {
+        result = E_IBX_UNKNOWN;
+        console.log("Exception OnInit:[" + e.message + "]");
+    } finally {
+        return result;
+    }
+}
+function Execute(aInput) {
+    console.log("Execute [" + aInput + "]");
+    try {
+        var res = OnInit();
+        if (Failed(res)) {
+            //초기화 오류나면 빠져나감.
+            return res;
+        }
+        iSASObj = JSON.parse(aInput);
+        var errCode;
+        var ClassName = iSASObj.Class;
+        var ModuleName = iSASObj.Module;
+
+        if (Failed(SetClassName(ClassName, ModuleName))) {
+            //setErrorAll(I_IBX_RESULT_MIXED_ALL);
+            iSASObj = setError(iSASObj, E_IBX_PARAMETER_INVALID);
+            iSASObj.Output.ErrorMessage = "class명과 job명을 확인해주시기 바랍니다.";
+        } else {
+            obj.iSASInOut = "";
+            OnExcute(0, JSON.stringify(iSASObj));
+
+            console.log("결과 테스트 [" + obj.iSASInOut + "]");
+
+            if (obj.iSASInOut != "")
+                iSASObj = obj.iSASInOut;
+        }
+    } catch (e) {
+        console.log("exception:[" + e.message + "]");
+    } finally {
+        return JSON.stringify(iSASObj);
+    }
+}
